@@ -1,0 +1,124 @@
+@model PaginatedResponse<ProductListItemViewModel>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<h1>Products</h1>
+
+@if (Model is null)
+{
+    <div class="alert alert-warning">Products could not be loaded.</div>
+}
+else
+{
+    var firstPageToShow = Math.Max(1, Model.PageNumber - 2);
+    var lastPageToShow = Math.Min(Model.TotalPages, Model.PageNumber + 2);
+
+    <p>
+        Showing page @Model.PageNumber of @Model.TotalPages, with @Model.TotalCount total products.
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Product.Name</td>
+                    <td>@item.Product.Sku</td>
+                    <td>@item.Product.Category</td>
+                    <td>
+                        @if (item.LatestPrice is null)
+                        {
+                            <span class="text-muted">No price</span>
+                        }
+                        else
+                        {
+                            <span>@item.LatestPrice.Amount.ToString("C")</span>
+                            <small class="text-muted d-block">
+                                @item.LatestPrice.Quantity @item.LatestPrice.UnitOfMeasure
+                            </small>
+                        }
+                    </td>
+                    <td>@item.Product.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="Products pagination">
+        <ul class="pagination">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link"
+                   asp-controller="Products"
+                   asp-action="Index"
+                   asp-route-pageNumber="@(Model.PageNumber - 1)"
+                   asp-route-pageSize="@Model.PageSize">Previous</a>
+            </li>
+
+            @if (firstPageToShow > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-controller="Products"
+                       asp-action="Index"
+                       asp-route-pageNumber="1"
+                       asp-route-pageSize="@Model.PageSize">1</a>
+                </li>
+
+                @if (firstPageToShow > 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            @for (var currentPage = firstPageToShow; currentPage <= lastPageToShow; currentPage++)
+            {
+                <li class="page-item @(currentPage == Model.PageNumber ? "active" : "")">
+                    <a class="page-link"
+                       asp-controller="Products"
+                       asp-action="Index"
+                       asp-route-pageNumber="@currentPage"
+                       asp-route-pageSize="@Model.PageSize">@currentPage</a>
+                </li>
+            }
+
+            @if (lastPageToShow < Model.TotalPages)
+            {
+                @if (lastPageToShow < Model.TotalPages - 1)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+
+                <li class="page-item">
+                    <a class="page-link"
+                       asp-controller="Products"
+                       asp-action="Index"
+                       asp-route-pageNumber="@Model.TotalPages"
+                       asp-route-pageSize="@Model.PageSize">@Model.TotalPages</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link"
+                   asp-controller="Products"
+                   asp-action="Index"
+                   asp-route-pageNumber="@(Model.PageNumber + 1)"
+                   asp-route-pageSize="@Model.PageSize">Next</a>
+            </li>
+        </ul>
+    </nav>
+}
