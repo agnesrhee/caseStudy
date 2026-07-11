@@ -12,8 +12,6 @@ namespace caseStudy.Models
 
         public int ProductId { get; set; }
 
-        public int? PriceId { get; set; }
-
         [Required]
         [MaxLength(200)]
         public string ProductName { get; set; } = string.Empty;
@@ -28,7 +26,9 @@ namespace caseStudy.Models
 
         public decimal Price { get; set; }
 
-        public decimal Quantity { get; set; } = 1;
+        public int Quantity { get; set; } = 1;
+
+        public bool IsRecurring { get; set; }
 
         public DateTime SoldAt { get; set; } = DateTime.UtcNow;
     }

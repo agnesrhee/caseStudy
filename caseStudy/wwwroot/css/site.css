@@ -21,6 +21,29 @@ body {
   margin-bottom: 60px;
 }
 
+.star-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #6c757d;
+  display: inline-flex;
+  font-size: 1.35rem;
+  height: 2rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 2rem;
+}
+
+.star-toggle:hover,
+.star-toggle:focus {
+  color: #b58100;
+}
+
+.star-toggle.is-selected {
+  color: #ffc107;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;

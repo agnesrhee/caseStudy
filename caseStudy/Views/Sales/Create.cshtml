@@ -1,0 +1,210 @@
+@model SalesCreateViewModel
+
+@{
+    ViewData["Title"] = "Log Sale";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1>Log Sale</h1>
+    <a class="btn btn-outline-secondary" asp-controller="Sales" asp-action="Index">Back to Sales</a>
+</div>
+
+<form asp-controller="Sales" asp-action="Create" method="post" id="sales-form">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row align-items-center mb-4">
+        <label asp-for="Username" class="col-sm-auto col-form-label fw-semibold"></label>
+        <div class="col-sm-4">
+            <input asp-for="Username" class="form-control" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div id="line-items" class="d-grid gap-3">
+        @for (var index = 0; index < Model.Items.Count; index++)
+        {
+            <div class="border rounded p-3 sale-line-item">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Items[index].Category">Category</label>
+                        <select class="form-select category-select" asp-for="Items[index].Category">
+                            <option value="">Select category</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Items[index].Category" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Items[index].ProductId">Product</label>
+                        <select class="form-select product-select" asp-for="Items[index].ProductId" data-selected-product-id="@Model.Items[index].ProductId">
+                            <option value="">Select product</option>
+                        </select>
+                        <span asp-validation-for="Items[index].ProductId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label" asp-for="Items[index].Quantity">Quantity</label>
+                        <input class="form-control" asp-for="Items[index].Quantity" type="number" min="1" step="1" inputmode="numeric" />
+                        <span asp-validation-for="Items[index].Quantity" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger remove-line-item w-100">Remove</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div id="duplicate-product-error" class="text-danger mt-3 d-none">
+        That product is already selected. Remove the duplicate or adjust the quantity.
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="button" class="btn btn-outline-secondary" id="add-line-item">Add Another Product</button>
+        <button type="submit" class="btn btn-primary">Log Sale</button>
+    </div>
+</form>
+
+<template id="line-item-template">
+    <div class="border rounded p-3 sale-line-item">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Category</label>
+                <select class="form-select category-select" data-field-name="Category">
+                    <option value="">Select category</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Product</label>
+                <select class="form-select product-select" data-field-name="ProductId">
+                    <option value="">Select product</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Quantity</label>
+                <input class="form-control" data-field-name="Quantity" type="number" min="1" step="1" inputmode="numeric" value="1" />
+            </div>
+
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger remove-line-item w-100">Remove</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const lineItems = document.getElementById('line-items');
+        const template = document.getElementById('line-item-template');
+        const duplicateError = document.getElementById('duplicate-product-error');
+
+        function reindexLineItems() {
+            lineItems.querySelectorAll('.sale-line-item').forEach((lineItem, index) => {
+                lineItem.querySelectorAll('[data-field-name]').forEach((field) => {
+                    field.name = `Items[${index}].${field.dataset.fieldName}`;
+                    field.id = `Items_${index}__${field.dataset.fieldName}`;
+                });
+
+                lineItem.querySelectorAll('[name^="Items["]').forEach((field) => {
+                    const fieldName = field.name.split('.').pop();
+                    field.name = `Items[${index}].${fieldName}`;
+                    field.id = `Items_${index}__${fieldName}`;
+                });
+            });
+        }
+
+        async function loadProducts(categorySelect) {
+            const lineItem = categorySelect.closest('.sale-line-item');
+            const productSelect = lineItem.querySelector('.product-select');
+            const category = categorySelect.value;
+
+            productSelect.innerHTML = '<option value="">Select product</option>';
+
+            if (!category) {
+                validateDuplicateProducts();
+                return;
+            }
+
+            const response = await fetch(`/Sales/ProductsByCategory?category=${encodeURIComponent(category)}`);
+            const products = await response.json();
+            const selectedProductId = productSelect.dataset.selectedProductId;
+
+            products.forEach((product) => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} (${product.sku})`;
+                productSelect.appendChild(option);
+            });
+
+            if (selectedProductId) {
+                productSelect.value = selectedProductId;
+                productSelect.dataset.selectedProductId = '';
+            }
+
+            validateDuplicateProducts();
+        }
+
+        function validateDuplicateProducts() {
+            const selectedProducts = Array.from(lineItems.querySelectorAll('.product-select'))
+                .map((select) => select.value)
+                .filter(Boolean);
+
+            const hasDuplicate = selectedProducts.some((productId, index) => selectedProducts.indexOf(productId) !== index);
+            duplicateError.classList.toggle('d-none', !hasDuplicate);
+
+            return !hasDuplicate;
+        }
+
+        document.getElementById('add-line-item').addEventListener('click', () => {
+            lineItems.appendChild(template.content.cloneNode(true));
+            reindexLineItems();
+        });
+
+        lineItems.addEventListener('change', async (event) => {
+            if (event.target.classList.contains('category-select')) {
+                await loadProducts(event.target);
+            }
+
+            if (event.target.classList.contains('product-select')) {
+                validateDuplicateProducts();
+            }
+        });
+
+        lineItems.addEventListener('click', (event) => {
+            if (!event.target.classList.contains('remove-line-item')) {
+                return;
+            }
+
+            const currentItems = lineItems.querySelectorAll('.sale-line-item');
+            if (currentItems.length > 1) {
+                event.target.closest('.sale-line-item').remove();
+                reindexLineItems();
+                validateDuplicateProducts();
+            }
+        });
+
+        document.getElementById('sales-form').addEventListener('submit', (event) => {
+            if (!validateDuplicateProducts()) {
+                event.preventDefault();
+            }
+        });
+
+        reindexLineItems();
+        document.querySelectorAll('.category-select').forEach((categorySelect) => {
+            if (categorySelect.value) {
+                loadProducts(categorySelect);
+            }
+        });
+    </script>
+}

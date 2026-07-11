@@ -1,4 +1,6 @@
-namespace caseStudy.Models
+using caseStudy.Models;
+
+namespace caseStudy.ViewModels
 {
     public class ProductListItemViewModel
     {

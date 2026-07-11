@@ -1,0 +1,94 @@
+@model SalesEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Sale";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1>Edit Sale</h1>
+    <a class="btn btn-outline-secondary" asp-controller="Sales" asp-action="Index">Back to Sales</a>
+</div>
+
+<form asp-controller="Sales" asp-action="Edit" asp-route-id="@Model.Id" method="post" id="sales-edit-form">
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row align-items-center mb-4">
+        <label asp-for="Username" class="col-sm-auto col-form-label fw-semibold"></label>
+        <div class="col-sm-4">
+            <input asp-for="Username" class="form-control" />
+            <span asp-validation-for="Username" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="border rounded p-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" asp-for="Category">Category</label>
+                <select class="form-select category-select" asp-for="Category">
+                    <option value="">Select category</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label" asp-for="ProductId">Product</label>
+                <select class="form-select product-select" asp-for="ProductId" data-selected-product-id="@Model.ProductId">
+                    <option value="">Select product</option>
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label" asp-for="Quantity">Quantity</label>
+                <input class="form-control" asp-for="Quantity" type="number" min="1" step="1" inputmode="numeric" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a class="btn btn-outline-secondary" asp-controller="Sales" asp-action="Index">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const categorySelect = document.querySelector('.category-select');
+        const productSelect = document.querySelector('.product-select');
+
+        async function loadProducts() {
+            const category = categorySelect.value;
+            productSelect.innerHTML = '<option value="">Select product</option>';
+
+            if (!category) {
+                return;
+            }
+
+            const response = await fetch(`/Sales/ProductsByCategory?category=${encodeURIComponent(category)}`);
+            const products = await response.json();
+            const selectedProductId = productSelect.dataset.selectedProductId;
+
+            products.forEach((product) => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = `${product.name} (${product.sku})`;
+                productSelect.appendChild(option);
+            });
+
+            if (selectedProductId) {
+                productSelect.value = selectedProductId;
+                productSelect.dataset.selectedProductId = '';
+            }
+        }
+
+        categorySelect.addEventListener('change', loadProducts);
+        loadProducts();
+    </script>
+}

@@ -1,0 +1,46 @@
+@model ProductPriceHistoryViewModel
+
+@{
+    ViewData["Title"] = "Price History";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1>Price History</h1>
+        <p class="text-muted mb-0">@Model.Product.Name (@Model.Product.Sku)</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-controller="Products" asp-action="Index">Back to Products</a>
+</div>
+
+@if (Model.PriceChanges.Count == 0)
+{
+    <div class="alert alert-info">No price history is available for this product.</div>
+}
+else
+{
+    <p class="text-muted">
+        Showing @Model.PriceChanges.Count price changes from @Model.RawPriceCount raw price records.
+    </p>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date Changed</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var price in Model.PriceChanges)
+            {
+                <tr>
+                    <td>@price.DateChanged.ToString("MMM d, yyyy")</td>
+                    <td>@price.Amount.ToString("C")</td>
+                    <td>@price.Quantity</td>
+                    <td>@price.UnitOfMeasure</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

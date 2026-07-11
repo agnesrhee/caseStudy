@@ -27,6 +27,7 @@ else
                 <th>Category</th>
                 <th>Price</th>
                 <th>Description</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -50,6 +51,12 @@ else
                         }
                     </td>
                     <td>@item.Product.Description</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           asp-controller="Products"
+                           asp-action="PriceHistory"
+                           asp-route-id="@item.Product.Id">Price History</a>
+                    </td>
                 </tr>
             }
         </tbody>

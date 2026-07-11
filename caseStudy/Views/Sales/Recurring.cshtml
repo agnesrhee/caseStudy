@@ -1,0 +1,75 @@
+@model IReadOnlyList<Sale>
+
+@{
+    ViewData["Title"] = "Recurring Sales";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1>Recurring Sales</h1>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-controller="Sales" asp-action="Index">Back to Sales</a>
+        <a class="btn btn-primary" asp-controller="Sales" asp-action="Create">Log Sale</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">No recurring sales have been saved yet.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="text-center">Recurring</th>
+                <th>Seller</th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Last Unit Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var sale in Model)
+            {
+                <tr>
+                    <td class="text-center">
+                        <form asp-controller="Sales" asp-action="ToggleRecurring" asp-route-id="@sale.Id" asp-route-returnAction="Recurring" method="post">
+                            <button type="submit"
+                                    class="star-toggle is-selected"
+                                    title="Remove from recurring sales"
+                                    aria-label="Remove from recurring sales">
+                                <span aria-hidden="true">★</span>
+                            </button>
+                        </form>
+                    </td>
+                    <td>@sale.Username</td>
+                    <td>@sale.ProductName</td>
+                    <td>@sale.ProductSku</td>
+                    <td>@sale.ProductCategory</td>
+                    <td>@sale.Quantity</td>
+                    <td>@sale.Price.ToString("C")</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-primary"
+                               asp-controller="Sales"
+                               asp-action="Create"
+                               asp-route-buyAgainSaleId="@sale.Id">Buy Again</a>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               asp-controller="Sales"
+                               asp-action="Edit"
+                               asp-route-id="@sale.Id">Edit</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

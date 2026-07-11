@@ -35,8 +35,7 @@ namespace caseStudy.Data
                 entity.Property(sale => sale.Price)
                     .HasColumnType("decimal(18,2)");
 
-                entity.Property(sale => sale.Quantity)
-                    .HasColumnType("decimal(18,2)");
+                entity.Property(sale => sale.Quantity);
             });
         }
     }
